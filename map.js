@@ -7,11 +7,36 @@ L.tileLayer('https://api.mapbox.com/styles/v1/lukaszkruk/cirgbygyt001bh5kp7bessg
 //need to enable JSONP in geoserver first 
 
 var geojsonLayer = new L.GeoJSON();
+var pointFeatures = [];
+var maxIntensity;
 
 function handleJson(data) {
-//	console.log(data);
 	geojsonLayer.addData(data);
-}
+		
+	for (var i = 0; i < data.features.length; i++) {
+		temp_array = [];
+
+			temp_array.push(
+				data.features[i].properties.Latitude,
+				data.features[i].properties.Longitude,
+				data.features[i].properties.IDPfamilies
+			);
+			pointFeatures.push(temp_array);
+	};
+	
+	// find the point with largest intensity 
+	
+	intensities = [];
+	
+	for (var i = 0; i < data.features.length; i++) {
+		intensities.push(data.features[i].properties.IDPfamilies)
+	};
+	
+	// console.log(intensities);
+	maxIntensity = Math.max.apply(Math, intensities);
+	
+	console.log(maxIntensity);
+};
 
 $.ajax({
 	url: "http://localhost:8080/geoserver/ows?service=wfs&version=2.0.0&request=GetFeature&typeNames=workspace1:view&outputFormat=text/javascript&count=100&format_options=callback:getJson",
@@ -20,13 +45,6 @@ $.ajax({
 	success: handleJson
 });
 
-map.addLayer(geojsonLayer);
+// map.addLayer(geojsonLayer);
 
-// add heatmap from geoserver
-
-// L.tileLayer.wms('http://localhost:8080/geoserver/wms?', {
-    // layers: 'workspace1:view-rasterised',
-	// format: 'image/png',
-	// transparent: true,
-	// tiled: false
-// }).addTo(map);
+var heat = L.heatLayer(pointFeatures, {radius: 15}).addTo(map);
