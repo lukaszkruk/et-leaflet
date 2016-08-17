@@ -96,7 +96,7 @@ function handleJson(data) {
     collapsed: false
   }).addTo(map);
   
-  map.attributionControl.addAttribution('Thematic data <a href="">DTM Iraq</a>')
+  map.attributionControl.addAttribution('Thematic data <a href="http://iraqdtm.iom.int">DTM Iraq</a>')
   
 };
 
