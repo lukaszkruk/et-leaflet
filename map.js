@@ -102,7 +102,7 @@ function handleJson(data) {
 
 //grab points from geoserver - need to enable JSONP in geoserver first 
 $.ajax({
-  url: "http://localhost:8080/geoserver/ows?service=wfs&version=2.0.0&request=GetFeature&typeNames=workspace1:view&outputFormat=text/javascript&count=1000&format_options=callback:getJson",
+  url: "http://10.10.55.3:8081/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite:vw_DTM_Dataset_Publish_latestRound&outputFormat=text%2Fjavascript&format_options=callback:getJson",
   dataType: 'jsonp',
   jsonpCallback: 'getJson',
   success: handleJson
