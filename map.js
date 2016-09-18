@@ -1,5 +1,7 @@
 var map = new L.Map('map').setView([33.5, 43], 6);
 
+var governorates = ["Anbar","Babylon", "Baghdad", "Basrah", "Dahuk", "Diyala", "Erbil", "Kerbala", "Kirkuk", "Missan", "Muthanna", "Najaf", "Ninewa", "Qadissiya", "SalahalDin", "Sulaymaniyah", "ThiQar", "Wassit"];
+
 var satLayer = L.tileLayer(
   'https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVrYXN6a3J1ayIsImEiOiJjaWlyOHhna2gwMmp2dTFrcGhmY3Z5NWgzIn0.8J8YJkhUxbP6jmB6VK4RLw', 
   {attribution: "Basemap &copy; <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a> &copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> &copy; <a href='https://www.digitalglobe.com/'>DigitalGlobe</a>"}
@@ -53,6 +55,7 @@ function circleMakerStyle(feature) {
 }
 
 function handleJson(data) {
+	console.log(data)
   // populate density layer	
   for (i in data.features) {
     point = {
@@ -69,20 +72,34 @@ function handleJson(data) {
 	intensities.push(data.features[i].properties.IDPfamilies)
   }
   maxIntensity = Math.max.apply(Math, intensities);
-
+  
   // populate point layer
   geojsonLayer = L.geoJson(data, {
     pointToLayer: function(feature, latlng) {
       return L.circleMarker(latlng, circleMakerStyle(feature));
     },
+	
     onEachFeature: function(feature, layer) {
-      layer.bindPopup(
-		"<center><small>Governorate - District</small><br />" +
-		feature.properties.Governorate + " - " + feature.properties.District + "<br /><hr>" +
-		// "<b>" + feature.properties.LocationName + " - " + feature.properties.ArabicName + "</b><br />" + 
-		"<b><a href='" + feature.properties.SAT.slice(12, -13) + "' target = '_blank'>" + feature.properties.LocationName + " - " + feature.properties.ArabicName + "</a></b><br />" +
-		feature.properties.IDPfamilies + " Families</center>"
-      );
+	
+	
+		// put together a list of all the origins 
+		origins = "";
+		
+		for (gov in governorates) {
+		  if (feature.properties[governorates[gov]] != "") {
+			gov_of_orig = governorates[gov]
+			gov_of_orig_pop = feature.properties[governorates[gov]]
+			origins += gov_of_orig + ": " + gov_of_orig_pop + "<br />"
+		  };
+		};
+
+		layer.bindPopup(
+			"<center><small>Governorate - District</small><br />" +
+			feature.properties.Governorate + " - " + feature.properties.District + "<br /><hr>" +
+			"<b>" + feature.properties.LocationName + " - " + feature.properties.ArabicName + "<br />" + 
+			// "<b><a href='" + feature.properties.SAT.slice(12, -13) + "' target = '_blank'>" + feature.properties.LocationName + " - " + feature.properties.ArabicName + "</a></b><br />" +
+			feature.properties.IDPfamilies + " Families</b><br /><br />" + origins + "</center><br/>"
+		);
     }
   }).addTo(map);
   
@@ -96,13 +113,13 @@ function handleJson(data) {
     collapsed: false
   }).addTo(map);
   
-  map.attributionControl.addAttribution('Thematic data <a href="http://iraqdtm.iom.int">DTM Iraq</a>')
+  map.attributionControl.addAttribution('Thematic data <a href="http://iraqdtm.iom.int">DTM Iraq</a>');
   
 };
 
 //grab points from geoserver - need to enable JSONP in geoserver first 
 $.ajax({
-  url: "http://10.10.55.3:8081/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite:vw_DTM_Dataset_Publish_latestRound&outputFormat=text%2Fjavascript&format_options=callback:getJson",
+  url: "http://iraqdtm.iom.int:8081/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite:vw_DTM_Dataset_Publish_latestRound&outputFormat=text%2Fjavascript&format_options=callback:getJson",
   dataType: 'jsonp',
   jsonpCallback: 'getJson',
   success: handleJson
